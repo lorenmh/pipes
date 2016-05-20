@@ -32,13 +32,51 @@ function getLeaves(doc) {
   return leaves;
 }
 
-// function searchDocument(doc, output, error) {
-//   var visited = {},
-//       foundInChild = {}
-//   ;
-// 
-//   for (var i
-// }
+function searchDocument(doc, re, output, error) {
+  var visited = {},
+      foundInChild = {},
+      found = []
+  ;
+
+  var current = getLeaves(doc);
+  var next = [];
+  var inNext = {};
+  var node, match, parent;
+
+  while (current.length !== 0) {
+    for (var i = 0; i < current.length; i++) {
+      node = current[i];
+      if (!visited[node]) {
+        visited[node] = true;
+        if (!foundInChild[node]) {
+          match = node.textContent.match(re);
+          if (match) {
+            found.push(node);
+            parent = node;
+            do {
+              parent = parent.parentElement;
+              if (foundInChild[parent]) {
+                break;
+              }
+              foundInChild[parent] = true;
+            } while(parent !== doc && parent !== null);
+          } else {
+            parent = node.parentElement;
+            if (!inNext[parent] && parent) {
+              next.push(parent);
+              inNext[parent] = true;
+            }
+          }
+        }
+      }
+    }
+
+    current = next;
+    next = [];
+  }
+
+  return found;
+}
 
 // A command looks like:
 var tre = function(io, args) {
