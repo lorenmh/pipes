@@ -32,39 +32,65 @@ function getLeaves(doc) {
   return leaves;
 }
 
-function searchDocument(doc, re, output, error) {
-  var visited = {},
-      foundInChild = {},
-      found = []
-  ;
+function idGenerator() {
+  var index = 0;
 
-  var current = getLeaves(doc);
-  var next = [];
-  var inNext = {};
-  var node, match, parent;
+  return function idForEl(el) {
+    if (el.$$searchId$$ === undefined) {
+      return (el.$$searchId$$ = index++);
+    } else {
+      return el.$$searchId$$;
+    }
+  };
+}
+
+var visited, foundInChild = {}, found = [], current, next, inNext
+function searchDocument(doc, re, output, error) {
+  visited = {}
+  foundInChild = {}
+  found = []
+  
+
+  current = getLeaves(doc);
+  next = [];
+  inNext = {};
+  var node, nodeId, match, parent, parentId;
+
+  var idForEl = idGenerator();
 
   while (current.length !== 0) {
     for (var i = 0; i < current.length; i++) {
       node = current[i];
-      if (!visited[node]) {
-        visited[node] = true;
-        if (!foundInChild[node]) {
+      nodeId = idForEl(node);
+
+      if (!visited[nodeId]) {
+        visited[nodeId] = true;
+        if (!foundInChild[nodeId]) {
           match = node.textContent.match(re);
           if (match) {
-            found.push(node);
             parent = node;
             do {
               parent = parent.parentElement;
-              if (foundInChild[parent]) {
-                break;
+              if (parent !== null) {
+                parentId = idForEl(parent);
+                if (foundInChild[parentId]) {
+                  break;
+                }
+                foundInChild[parentId] = true;
               }
-              foundInChild[parent] = true;
             } while(parent !== doc && parent !== null);
+
+            //while(node.nodeName === '#text' && node.parentElement !== null) {
+              //node = node.parentElement;
+            //}
+
+            found.push(node);
           } else {
             parent = node.parentElement;
-            if (!inNext[parent] && parent) {
+            parentId = idForEl(parent);
+            if (parent && !inNext[parentId]) {
               next.push(parent);
-              inNext[parent] = true;
+              inNext[parentId] = true;
             }
           }
         }
