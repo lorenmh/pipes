@@ -8,17 +8,37 @@ var helpers = require('./helpers'),
 
 // breadth
 var l = [];
-function leaves(doc) {
-  var ch = []
-}
-
-function searchDocument(doc, output, error) {
-  var visited = {},
-      foundInChild = {}
+function getLeaves(doc) {
+  var leaves = [],
+      current = [doc.body],
+      next = []
   ;
 
-  for (var i
+  while (current.length !== 0) {
+    for (var i = 0; i < current.length; i++) {
+      var node = current[i];
+      var children = Array.prototype.slice.apply(node.children);
+
+      if (children.length) {
+        next = next.concat(children);
+      } else {
+        leaves.push(node);
+      }
+    }
+    current = next;
+    next = [];
+  }
+
+  return leaves;
 }
+
+// function searchDocument(doc, output, error) {
+//   var visited = {},
+//       foundInChild = {}
+//   ;
+// 
+//   for (var i
+// }
 
 // A command looks like:
 var tre = function(io, args) {
@@ -42,15 +62,15 @@ var tre = function(io, args) {
       }
     }
 
-    if (isFunc(io.input)) {
-      input = io.input();
-      
-      if isValue(input) {
-        fn(v);
-      }
-    } else {
-      io.document
-    }
-  }
+//     if (isFunc(io.input)) {
+//       input = io.input();
+//       
+//       if isValue(input) {
+//         fn(v);
+//       }
+//     } else {
+//       io.document
+//     }
+  };
 
-}
+};
