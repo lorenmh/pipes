@@ -95,7 +95,7 @@ function searchDocument(doc, re, output, error) {
   var visited = {},
       foundInChild = {},
       found = [],
-      depths = getDepths(document),
+      depths = getDepths(doc),
       depth, node, nodeId, match, parent, parentId, parentDepth
   ;
   for (var i = depths.length - 1; i >= 0; i--) {
@@ -109,7 +109,6 @@ function searchDocument(doc, re, output, error) {
         if (!foundInChild[nodeId]) {
           match = node.textContent.match(re);
           if (match) {
-            console.log('matched');
             parent = node;
             while (parent.parentElement) {
               parent = parent.parentElement;
@@ -134,75 +133,52 @@ function searchDocument(doc, re, output, error) {
 
   return found;
 }
-// 
-// 
-//   while (current.length !== 0) {
-//     for (var i = 0; i < current.length; i++) {
-//       node = current[i];
-//       nodeId = idForEl(node);
-// 
-//       if (!visited[nodeId]) {
-//         visited[nodeId] = true;
-//         if (!foundInChild[nodeId]) {
-//           match = node.textContent.match(re);
-//           if (match) {
-//             parent = node;
-//             do {
-//               parent = parent.parentElement;
-//               if (parent !== null) {
-//                 parentId = idForEl(parent);
-//                 if (foundInChild[parentId]) {
-//                   break;
-//                 }
-//                 foundInChild[parentId] = true;
-//               }
-//             } while(parent !== doc && parent !== null);
-// 
-//             //while(node.nodeName === '#text' && node.parentElement !== null) {
-//               //node = node.parentElement;
-//             //}
-// 
-//             found.push(node);
-//           } else {
-//             parent = node.parentElement;
-//             parentId = idForEl(parent);
-//             if (parent && !inNext[parentId]) {
-//               next.push(parent);
-//               inNext[parentId] = true;
-//             }
-//           }
-//         }
-//       }
-//     }
-// 
-//     current = next;
-//     next = [];
-//   }
-// 
-//   return found;
-// }
 
 // A command looks like:
-var tre = function(io, args) {
+var tre = function(io) {
   // var io = {
   //   input: null,
   //   output: output,
   //   error: error,
   //   commandError: commandError
   //   start: start,
-  //   doc: null
+  //   document: null
   // }
+  var re = new RegExp(io.args[0]);
 
-  var re = new RegExp(args[0]);
+  io.exec(function exec_tre() {
+    if (io.input) {
+      io.input(function(buffer) {
+        var i, value, match
+        ;
 
-  io.execute = function execute() {
-    function fn(v) {
-      v = String(v);
+        if (io.finished) { return; }
+        if (buffer === EOF) { return (io.finished = true); }
 
-      if (v.match(re)) {
-        io.write(v);
+        for (i = 0; i < buffer.length; i++) {
+          value = buffer[i];
+          if (isValue(value)) {
+            match = String(value).match(re);
+            if (match) {
+              io.output(match);
+            }
+          }
+        }
+      });
+    } else {
+      var nodes, i, node, match
+      ;
+
+      nodes = searchDocument(io.document, re);
+      for (i = 0; i < nodes.length; i++) {
+        node = nodes[i];
+        match = node.textContent.match(re);
+        if (match) {
+          io.output(match);
+        }
       }
     }
+  });
 
 //     if (isFunc(io.input)) {
 //       input = io.input();
@@ -213,6 +189,5 @@ var tre = function(io, args) {
 //     } else {
 //       io.document
 //     }
-  };
 
 };

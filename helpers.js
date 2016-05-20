@@ -6,4 +6,4 @@ function isValue(v) {
   return !(v === undefined || v === null);
 }
 
-module.exports = { isFunc };
+module.exports = { isFunc, isValue };
